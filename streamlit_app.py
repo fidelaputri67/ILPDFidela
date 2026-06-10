@@ -108,7 +108,7 @@ normal_range = {
 if menu == "Home":
     st.title("🩺 Sistem Prediksi Penyakit Hati (ILPD)")
 
-    st.info("Machine Learning Naive Bayes untuk klasifikasi penyakit hati")
+    st.info("Machine Learning Random Forest untuk klasifikasi penyakit hati")
 
     st.markdown("""
     ### 📌 Fitur aplikasi:
