@@ -148,7 +148,7 @@ elif menu == "Prediksi":
 
     st.title("🔍 Prediksi Gangguan Hati")
 
-    st.warning("Semua input wajib > 0")
+    # st.warning("Semua input wajib > 0")
 
     def safe_input(label, min_v, max_v, default):
         val = st.number_input(label, min_value=min_v, max_value=max_v, value=default)
