@@ -108,7 +108,7 @@ normal_range = {
 if menu == "Home":
     st.title("🩺 Sistem Prediksi Penyakit Hati (ILPD)")
 
-    st.info("Machine Learning KNN untuk klasifikasi penyakit hati")
+    st.info("Machine Learning Naive Bayes untuk klasifikasi penyakit hati")
 
     st.markdown("""
     ### 📌 Fitur aplikasi:
@@ -148,7 +148,7 @@ elif menu == "Prediksi":
 
     st.title("🔍 Prediksi Gangguan Hati")
 
-    st.warning("Semua input wajib > 0")
+   # st.warning("Semua input wajib > 0")
 
     def safe_input(label, min_v, max_v, default):
         val = st.number_input(label, min_value=min_v, max_value=max_v, value=default)
