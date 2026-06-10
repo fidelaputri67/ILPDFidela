@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -14,18 +13,17 @@ st.set_page_config(
 )
 
 # ==========================================
-# LOAD MODEL + SCALER
+# LOAD MODEL (Naive Bayes)
 # ==========================================
 @st.cache_resource
 def load_model():
     model = joblib.load("ilpd_best_model.pkl")
-    scaler = joblib.load("quantile_transformer.pkl")
-    return model, scaler
+    return model
 
-model, scaler = load_model()
+model = load_model()
 
 # ==========================================
-# MENU
+# NAVIGATION
 # ==========================================
 menu = st.sidebar.selectbox(
     "📌 Menu",
@@ -48,14 +46,13 @@ normal_range = {
 # HOME
 # ==========================================
 if menu == "Home":
-    st.title("🩺 ILPD Liver Disease Prediction")
-
-    st.info("Model Machine Learning (Naive Bayes) untuk prediksi penyakit hati")
+    st.title("🩺 Sistem Prediksi Penyakit Hati (ILPD)")
+    st.info("Model Naive Bayes untuk klasifikasi penyakit hati")
 
     st.markdown("""
-    ### Fitur:
+    ### 📌 Fitur aplikasi:
     - Prediksi penyakit hati
-    - Informasi dataset
+    - Informasi dataset ILPD
     - Edukasi kesehatan hati
     """)
 
@@ -66,15 +63,18 @@ elif menu == "Dataset ILPD":
 
     st.title("📊 Dataset ILPD")
 
-    st.markdown("Dataset dari UCI Machine Learning Repository")
+    st.markdown("""
+    Dataset berasal dari UCI Machine Learning Repository:
+    https://archive.ics.uci.edu/ml/datasets/ILPD+(Indian+Liver+Patient+Dataset)
+    """)
 
-    st.subheader("Nilai Normal Fitur")
+    st.subheader("📌 Range Normal Fitur")
 
     st.dataframe(
         pd.DataFrame.from_dict(
             normal_range,
             orient="index",
-            columns=["Range Normal"]
+            columns=["Nilai Normal"]
         ),
         use_container_width=True
     )
@@ -84,54 +84,62 @@ elif menu == "Dataset ILPD":
 # ==========================================
 elif menu == "Prediksi":
 
-    st.title("🔍 Prediksi Penyakit Hati")
+    st.title("🔍 Prediksi Gangguan Hati")
 
-    st.warning("Input boleh 0, tapi pastikan sesuai kondisi medis")
+    st.info("Input boleh bernilai 0 atau lebih (>= 0)")
 
-    def input_num(label):
-        return st.number_input(label, min_value=0.0, value=0.0, step=0.1)
+    def safe_input(label):
+        return st.number_input(label, min_value=0.0, value=0.0)
 
     col1, col2 = st.columns(2)
 
     with col1:
-        tb = input_num("Total Bilirubin")
-        db = input_num("Direct Bilirubin")
-        alt = input_num("ALT (Alamine Aminotransferase)")
+        tb = safe_input("Total Bilirubin")
+        db = safe_input("Direct Bilirubin")
+        alt = safe_input("ALT")
 
     with col2:
-        ast = input_num("AST (Aspartate Aminotransferase)")
-        tp = input_num("Total Proteins")
-        alb = input_num("Albumin")
+        ast = safe_input("AST")
+        tp = safe_input("Total Proteins")
+        alb = safe_input("Albumin")
 
-    input_df = pd.DataFrame([[tb, db, alt, ast, tp, alb]],
-        columns=[
-            'Total_Bilirubin',
-            'Direct_Bilirubin',
-            'Alamine_Aminotransferase',
-            'Aspartate_Aminotransferase',
-            'Total_Proteins',
-            'Albumin'
-        ]
-    )
+    input_df = pd.DataFrame([[tb, db, alt, ast, tp, alb]], columns=[
+        'Total_Bilirubin',
+        'Direct_Bilirubin',
+        'Alamine_Aminotransferase',
+        'Aspartate_Aminotransferase',
+        'Total_Proteins',
+        'Albumin'
+    ])
 
-    st.subheader("Input Data")
+    st.subheader("Data Input")
     st.dataframe(input_df)
 
     if st.button("🔬 Prediksi"):
 
-        scaled = scaler.transform(input_df)
-        pred = model.predict(scaled)[0]
-        prob = model.predict_proba(scaled)[0]
+        pred = model.predict(input_df)[0]
 
-        st.subheader("Hasil Prediksi")
+        # Jika model mendukung probabilitas
+        if hasattr(model, "predict_proba"):
+            prob = model.predict_proba(input_df)[0]
 
-        if pred == 1:
-            st.error("🔴 Terindikasi Gangguan Hati")
+            st.subheader("Hasil Prediksi")
+
+            if pred == 1:
+                st.error("🔴 Terindikasi Gangguan Hati")
+            else:
+                st.success("🟢 Normal")
+
+            st.write(f"Probabilitas Normal: {prob[0]*100:.2f}%")
+            st.write(f"Probabilitas Gangguan: {prob[1]*100:.2f}%")
+
         else:
-            st.success("🟢 Normal")
+            st.subheader("Hasil Prediksi")
 
-        st.write(f"Probabilitas Normal: {prob[0]*100:.2f}%")
-        st.write(f"Probabilitas Gangguan: {prob[1]*100:.2f}%")
+            if pred == 1:
+                st.error("🔴 Terindikasi Gangguan Hati")
+            else:
+                st.success("🟢 Normal")
 
 # ==========================================
 # HEALTH INFO
@@ -141,14 +149,14 @@ elif menu == "Kesehatan Hati":
     st.title("🫀 Edukasi Kesehatan Hati")
 
     st.markdown("""
-    ### Fungsi hati:
+    ### 📌 Fungsi hati
     - Detoksifikasi racun
     - Metabolisme nutrisi
     - Produksi empedu
     """)
 
     st.markdown("""
-    ### Penyebab gangguan hati:
+    ### ⚠️ Penyebab gangguan hati
     - Alkohol
     - Hepatitis
     - Obesitas
@@ -158,17 +166,23 @@ elif menu == "Kesehatan Hati":
     st.success("Menjaga hati = menjaga kesehatan tubuh")
 
     df_info = pd.DataFrame({
-        "Fitur": [
-            "Bilirubin", "Direct Bilirubin", "ALT",
-            "AST", "Total Proteins", "Albumin"
-        ],
+        "Fitur": list(normal_range.keys()),
+        "Nilai Normal": list(normal_range.values()),
         "Fungsi": [
             "Sisa pemecahan darah",
-            "Bentuk bilirubin siap dibuang",
+            "Bilirubin terkonjugasi",
             "Enzim kerusakan hati",
-            "Enzim metabolisme tubuh",
-            "Protein imun tubuh",
-            "Protein utama hati"
+            "Enzim metabolisme",
+            "Protein darah",
+            "Protein hati"
+        ],
+        "Interpretasi": [
+            "Naik → gangguan hati",
+            "Naik → sumbatan empedu",
+            "Naik → kerusakan sel hati",
+            "Naik → gangguan hati/otot",
+            "Rendah → gangguan hati",
+            "Rendah → fungsi hati menurun"
         ]
     })
 
